@@ -1,0 +1,12 @@
+# Executaveis compilados
+*.exe
+
+# Arquivos objeto
+*.o
+
+# Ambiente virtual Python
+.venv/
+
+# Cache Python
+__pycache__/
+*.pyc
