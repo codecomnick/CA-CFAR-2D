@@ -163,17 +163,24 @@ Pfa = (1 + alpha / N)^(-N)
 Com `alpha = 6.0`, o valor esperado e aproximadamente
 `0.0031414369621206085`.
 
-O teste usara semente fixa e pelo menos 2.000 matrizes 30 x 30, totalizando
-968.000 CUTs validas. O numero de falsos alarmes sera dividido pelo numero de
-CUTs avaliadas. O criterio de aprovacao sera o `Pfa` teorico estar contido no
-intervalo de confianca binomial de Wilson de 99% calculado a partir do resultado
-observado.
+O teste usara semente fixa e 5.000 matrizes 30 x 30. Para preservar a
+independencia exigida pelo intervalo binomial, somente nove CUTs com janelas
+9 x 9 nao sobrepostas serao contadas em cada matriz: o produto cartesiano dos
+indices de linha e coluna `{4, 13, 22}`. Isso produz 45.000 ensaios Bernoulli
+independentes sob o modelo de ruido i.i.d. O numero de falsos alarmes sera
+dividido por 45.000. O criterio de aprovacao sera o `Pfa` teorico estar contido
+no intervalo de confianca binomial de Wilson de 99% calculado a partir do
+resultado observado. As demais CUTs processadas pelo algoritmo nao entrarao no
+calculo estatistico porque suas janelas se sobrepoem.
 
 ### Probabilidade de deteccao
 
 Um alvo deterministico sera somado a CUT central de matrizes com o mesmo ruido
-exponencial. Serao avaliados pelo menos cinco niveis de SNR, incluindo 0, 5, 10,
-15 e 20 dB, com semente fixa e pelo menos 1.000 realizacoes por nivel.
+exponencial. Serao avaliados cinco niveis de SNR: 0, 5, 10, 15 e 20 dB, com
+semente fixa e pelo menos 1.000 realizacoes por nivel. Os mesmos mapas de ruido
+serao reutilizados em todos os niveis de SNR; somente a potencia adicionada a
+CUT mudara. Esse uso de numeros aleatorios comuns torna a verificacao de
+monotonicidade deterministica para cada realizacao.
 
 O criterio de aprovacao sera que a estimativa de `Pd` nao diminua quando o SNR
 aumentar e que `Pd` em 15 dB seja no minimo 0,95. Os valores medidos serao
@@ -261,4 +268,3 @@ O trabalho sera considerado concluido quando:
   <https://github.com/nedonatelli/TCL/blob/main/LICENSE>
 - H. Rohling, "Radar CFAR Thresholding in Clutter and Multiple Target
   Situations", IEEE Transactions on Aerospace and Electronic Systems, 1983.
-
