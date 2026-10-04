@@ -5,7 +5,7 @@ SANITIZER_FLAGS := -fsanitize=address,undefined -fno-omit-frame-pointer
 BUILD_DIR := build
 BUILD_STAMP := $(BUILD_DIR)/.stamp
 
-.PHONY: all build test test-c test-python test-sanitize clean
+.PHONY: all build test test-c test-python test-statistical test-sanitize clean
 
 all: build
 
@@ -31,6 +31,9 @@ test-c: $(BUILD_DIR)/test_cfar
 
 test-python:
 	$(PYTHON) -m pytest -m "not statistical" -q
+
+test-statistical:
+	$(PYTHON) -m pytest -m statistical -q
 
 test-sanitize: $(BUILD_DIR)/test_cfar_sanitize
 	./$(BUILD_DIR)/test_cfar_sanitize
