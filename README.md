@@ -163,7 +163,7 @@ Os arquivos `radar_XX.txt` possuem matrizes de:
 30 × 30
 ```
 
-Os arquivos `radar_XX_targets.txt` armazenam as posições e potências dos alvos conhecidos e serão utilizados posteriormente para validação automatizada.
+Os arquivos `radar_XX_targets.txt` armazenam as posições e potências dos alvos conhecidos e são usados pela validação automatizada.
 
 ---
 
@@ -199,7 +199,9 @@ Esse cenário permite observar o comportamento do algoritmo diante de um nível 
 
 Ruído entre `0` e `2`, sem alvos.
 
-Esse cenário será utilizado posteriormente para avaliar falsos alarmes.
+Esse cenário verifica a ausência de detecções nos dados versionados. A taxa
+teórica de falsos alarmes é avaliada separadamente com ruído exponencial e
+amostras independentes, como descrito em `docs/TESTING.md`.
 
 ### Radar 04
 
@@ -291,15 +293,12 @@ python -m pip install numpy
 
 ## 🚧 Próximos passos
 
-O projeto será posteriormente expandido para incluir:
+Possíveis extensões futuras:
 
-* Testes automatizados externos;
-* Comparação entre detecções esperadas e obtidas;
-* Cálculo de taxa de detecção;
-* Avaliação de falsos alarmes;
-* Diferentes valores de `alpha`;
-* Mais cenários de teste;
-* Possível adaptação para execução em hardware embarcado.
+* Avaliar diferentes valores de `alpha`;
+* Adicionar modelos Swerling e clutter não homogêneo;
+* Criar mais cenários de teste;
+* Medir tempo e consumo de memória em hardware embarcado.
 
 ---
 

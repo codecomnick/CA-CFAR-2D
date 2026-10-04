@@ -228,4 +228,3 @@ A versao e aceita quando:
   precisao em ponto flutuante reduzido.
 - O algoritmo nao processa bordas; mudar essa politica exige novos criterios e
   novos testes.
-
