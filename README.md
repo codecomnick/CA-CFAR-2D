@@ -258,6 +258,29 @@ Para gerar novamente os cenários:
 python tools/generate_data.py
 ```
 
+---
+
+## 🧪 Testes e validacao
+
+Crie um ambiente Python isolado e instale as dependencias gratuitas fixadas:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements-test.txt
+```
+
+Execute a suite deterministica, os ensaios estatisticos e os sanitizers:
+
+```bash
+make test
+make test-statistical
+make test-sanitize
+```
+
+Os procedimentos, oraculos de referencia, criterios de aprovacao e resultados
+medidos estao documentados em [docs/TESTING.md](docs/TESTING.md).
+
 Caso o NumPy ainda não esteja instalado:
 
 ```bash
