@@ -1,10 +1,11 @@
 CC ?= cc
+PYTHON ?= python3
 CFLAGS := -std=c11 -Wall -Wextra -Wpedantic -Werror
 SANITIZER_FLAGS := -fsanitize=address,undefined -fno-omit-frame-pointer
 BUILD_DIR := build
 BUILD_STAMP := $(BUILD_DIR)/.stamp
 
-.PHONY: all build test test-c test-sanitize clean
+.PHONY: all build test test-c test-python test-sanitize clean
 
 all: build
 
@@ -23,10 +24,13 @@ $(BUILD_DIR)/test_cfar: tests/test_cfar.c src/cfar.c src/cfar.h | $(BUILD_STAMP)
 $(BUILD_DIR)/test_cfar_sanitize: tests/test_cfar.c src/cfar.c src/cfar.h | $(BUILD_STAMP)
 	$(CC) $(CFLAGS) $(SANITIZER_FLAGS) tests/test_cfar.c src/cfar.c -lm -o $@
 
-test: test-c
+test: test-c test-python
 
 test-c: $(BUILD_DIR)/test_cfar
 	./$(BUILD_DIR)/test_cfar
+
+test-python:
+	$(PYTHON) -m pytest -m "not statistical" -q
 
 test-sanitize: $(BUILD_DIR)/test_cfar_sanitize
 	./$(BUILD_DIR)/test_cfar_sanitize
