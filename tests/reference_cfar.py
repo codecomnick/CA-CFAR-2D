@@ -60,3 +60,20 @@ def ca_cfar_2d_reference(data: np.ndarray, alpha: float) -> CfarReferenceResult:
             detections[row, col] = matrix[row, col] > cell_threshold
 
     return CfarReferenceResult(detections, threshold, noise_estimate)
+
+
+def nrl_ca_cfar_2d(data: np.ndarray, alpha: float) -> CfarReferenceResult:
+    from pytcl.mathematical_functions.signal_processing.detection import cfar_2d
+
+    result = cfar_2d(
+        data,
+        guard_cells=(1, 1),
+        ref_cells=(3, 3),
+        method="ca",
+        alpha=alpha,
+    )
+    return CfarReferenceResult(
+        np.asarray(result.detections, dtype=bool),
+        np.asarray(result.threshold, dtype=np.float64),
+        np.asarray(result.noise_estimate, dtype=np.float64),
+    )
