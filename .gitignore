@@ -1,12 +1,9 @@
-# Executaveis compilados
+build/
 *.exe
-
-# Arquivos objeto
 *.o
-
-# Ambiente virtual Python
 .venv/
-
-# Cache Python
 __pycache__/
+.pytest_cache/
 *.pyc
+*.so
+*.dylib
