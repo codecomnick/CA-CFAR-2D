@@ -85,28 +85,39 @@ CUT > threshold
 ## 📁 Estrutura do projeto
 
 ```text
-2D CA CFAR/
+CA-CFAR-2D/
+│
+├── .github/
+│   └── workflows/
+│       └── test.yml
 │
 ├── data/
 │   ├── radar_01.txt
 │   ├── radar_01_targets.txt
-│   ├── radar_02.txt
-│   ├── radar_02_targets.txt
-│   ├── radar_03.txt
-│   ├── radar_03_targets.txt
-│   ├── radar_04.txt
-│   ├── radar_04_targets.txt
-│   ├── radar_05.txt
-│   └── radar_05_targets.txt
+│   └── ...
+│
+├── docs/
+│   └── TESTING.md
 │
 ├── src/
 │   ├── cfar.c
 │   ├── cfar.h
 │   └── main.c
 │
+├── tests/
+│   ├── test_cfar.c
+│   ├── test_cli.py
+│   ├── test_reference.py
+│   ├── test_scenarios.py
+│   ├── test_statistics.py
+│   └── reference_cfar.py
+│
 ├── tools/
 │   └── generate_data.py
 │
+├── Makefile
+├── pytest.ini
+├── requirements-test.txt
 └── README.md
 ```
 
@@ -262,32 +273,169 @@ python tools/generate_data.py
 
 ---
 
-## 🧪 Testes e validacao
+## 🧪 Testes e validação
 
-Crie um ambiente Python isolado e instale as dependencias gratuitas fixadas:
+A validação foi construída apenas com ferramentas gratuitas e reproduzíveis.
+As versões de `pytest`, NumPy, SciPy e NRL Tracker estão fixadas em
+[`requirements-test.txt`](requirements-test.txt), e os testes aleatórios usam a
+semente `20261004`.
+
+### Preparação do ambiente
+
+Pré-requisitos:
+
+* compilador C com suporte a C11;
+* Make;
+* Python 3.10 ou superior.
+
+Crie o ambiente virtual:
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements-test.txt
 ```
 
-Execute a suite deterministica, os ensaios estatisticos e os sanitizers:
+Ative-o no Bash ou Zsh:
 
 ```bash
+source .venv/bin/activate
+```
+
+No Fish, use o script específico do shell:
+
+```fish
+source .venv/bin/activate.fish
+```
+
+Instale e verifique as dependências:
+
+```bash
+python -m pip install -r requirements-test.txt
+python -m pip check
+```
+
+### Como executar
+
+```bash
+# 7 testes C e 17 testes rápidos em Python
+make test
+
+# 2 ensaios estatísticos de Pfa e Pd
+make test-statistical
+
+# 7 testes C instrumentados com ASan e UBSan
+make test-sanitize
+```
+
+Para executar toda a sequência a partir de uma compilação limpa:
+
+```bash
+make clean
 make test
 make test-statistical
 make test-sanitize
 ```
 
-Os procedimentos, oraculos de referencia, criterios de aprovacao e resultados
-medidos estao documentados em [docs/TESTING.md](docs/TESTING.md).
+### Escopo das suítes
 
-Caso o NumPy ainda não esteja instalado:
+Os números abaixo pertencem a grupos diferentes e não devem ser interpretados
+como se todos fossem testes dos cinco arquivos `radar_XX.txt`.
 
-```bash
-python -m pip install numpy
+| Grupo | Quantidade | O que verifica |
+| --- | ---: | --- |
+| Testes unitários em C | 7 | matriz nula e constante, limiar estrito, células de guarda, bordas, invariância de escala e múltiplos alvos |
+| Testes rápidos em Python | 17 | oráculos de referência, 20 mapas aleatórios, cinco cenários versionados, CLI e independência das janelas estatísticas |
+| Testes estatísticos em Python | 2 | probabilidade de falso alarme (`Pfa`) e probabilidade de detecção (`Pd`) |
+
+Os 17 testes rápidos em Python são compostos por:
+
+* 6 testes do algoritmo e dos oráculos de referência;
+* 5 casos parametrizados, um para cada cenário versionado;
+* 5 testes da interface de linha de comando;
+* 1 teste que confirma que as janelas amostradas no ensaio de `Pfa` não se
+  sobrepõem.
+
+### Comparação com referências independentes
+
+A implementação C é comparada com duas referências:
+
+1. **Oráculo NumPy:** implementação explícita em
+   [`tests/reference_cfar.py`](tests/reference_cfar.py), independente do código
+   C. Ela percorre a janela `9 × 9`, exclui a região central `3 × 3`, calcula a
+   média das 72 células de treinamento e aplica a mesma decisão estrita
+   `CUT > threshold`.
+2. **NRL Tracker 1.19.0:** biblioteca externa em domínio público/CC0, usada
+   com o método CA-CFAR e os mesmos parâmetros do projeto.
+
+A comparação usa 20 mapas de ruído exponencial gerados com semente fixa. Cada
+mapa possui uma região válida de `22 × 22`, totalizando 9.680 decisões
+comparadas. Na região interior:
+
+* ruído e limiar do NumPy e do NRL Tracker devem coincidir com tolerância
+  `1e-12`;
+* as matrizes de detecção produzidas por C, NumPy e NRL Tracker devem ser
+  idênticas;
+* as quatro linhas e colunas de borda devem permanecer sem detecções.
+
+### Cenários versionados
+
+Os cinco cenários armazenados em `data/` funcionam como testes de regressão com
+resultados conhecidos:
+
+| Cenário | Condição | Detecções esperadas |
+| --- | --- | ---: |
+| Radar 01 | três alvos fortes, ruído entre 0 e 2 | 3 |
+| Radar 02 | três alvos fortes, ruído entre 0 e 10 | 3 |
+| Radar 03 | somente ruído, sem alvos | 0 |
+| Radar 04 | um alvo de potência 3, abaixo do limiar | 0 |
+| Radar 05 | cinco alvos fortes em posições distintas | 5 |
+
+Cada linha da tabela corresponde a um dos cinco casos parametrizados em
+[`tests/test_scenarios.py`](tests/test_scenarios.py). Portanto, esses cenários
+representam apenas 5 dos 17 testes rápidos em Python.
+
+### Ensaios estatísticos
+
+O teste de falso alarme gera 5.000 mapas de ruído exponencial e avalia nove
+CUTs com janelas que não se sobrepõem, totalizando 45.000 ensaios. Para 72
+células de treinamento e `alpha = 6.0`, a previsão matemática é:
+
+```text
+Pfa = (1 + alpha / 72)^(-72) = 0.003141436962
 ```
+
+O resultado observado foi `0.002977777778`, equivalente a 134 falsos alarmes.
+O intervalo de Wilson de 99% foi
+`[0.002385431469, 0.003716666526]`, contendo a previsão teórica.
+
+O teste de detecção utiliza 1.000 realizações para cada nível de SNR e verifica
+se a `Pd` não diminui quando o alvo fica mais forte:
+
+| SNR | 0 dB | 5 dB | 10 dB | 15 dB | 20 dB |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| `Pd` | 0,6% | 6,3% | 100% | 100% | 100% |
+
+Além da monotonicidade, o critério exige `Pd >= 95%` em 15 dB.
+
+### Segurança da implementação C
+
+`make test-sanitize` recompila a suíte C com:
+
+* **AddressSanitizer (ASan):** detecta acessos inválidos e erros de memória;
+* **UndefinedBehaviorSanitizer (UBSan):** detecta operações com comportamento
+  indefinido em C.
+
+Na execução de referência, os sete testes terminaram sem diagnósticos dos
+sanitizers. A compilação também usa `-Wall -Wextra -Wpedantic -Werror` para
+tratar avisos como erros.
+
+### Integração contínua
+
+O workflow [`.github/workflows/test.yml`](.github/workflows/test.yml) repete
+automaticamente a instalação das dependências, os testes determinísticos, os
+ensaios estatísticos e os sanitizers em cada `push` e `pull_request`.
+
+Os procedimentos completos, critérios de aprovação, limitações e valores de
+referência estão documentados em [`docs/TESTING.md`](docs/TESTING.md).
 
 ---
 
